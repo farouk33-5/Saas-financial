@@ -4,258 +4,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whop Growth Pro - Financial Intelligence</title>
+    <title>Whop Business Intelligence Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        body { font-family: 'Inter', sans-serif; }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-active { border-bottom: 3px solid #6366f1; color: #6366f1; background: #f5f3ff; }
-        .input-focus:focus { border-color: #6366f1; ring: 2px; ring-color: #818cf8; }
+        .tab-content.active { display: block; }
+        .active-tab { border-bottom: 4px solid #ff5a1f; color: #ff5a1f; }
     </style>
 </head>
-<body class="bg-slate-100 p-4">
+<body class="bg-slate-50 min-h-screen">
 
-    <div class="max-w-6xl mx-auto bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200">
-        <div class="bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 p-8 text-white">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-black tracking-tight">Whop Growth Pro</h1>
-                    <p class="text-indigo-100 opacity-80">Strategic Financial Operations for Digital Creators</p>
-                </div>
-                <div class="bg-white/10 p-3 rounded-2xl">
-                    <span class="text-xs font-bold uppercase tracking-widest">v1.0 Production</span>
-                </div>
-            </div>
+    <nav class="bg-black text-white p-4 flex justify-between items-center shadow-xl">
+        <div class="flex items-center gap-2">
+            <div class="bg-[#ff5a1f] w-8 h-8 rounded-lg flex items-center justify-center font-black">W</div>
+            <span class="font-black tracking-tighter text-xl">BI HUB</span>
         </div>
+        <button onclick="simulateConnect()" class="bg-[#ff5a1f] px-4 py-2 rounded-full text-xs font-bold hover:bg-orange-600 transition">
+            ðŸ”— CONNECT WHOP API
+        </button>
+    </nav>
 
-        <div class="flex border-b bg-white sticky top-0 z-10 overflow-x-auto">
-            <button onclick="switchTab('strategy')" id="btn-strategy" class="flex-1 py-4 px-6 text-sm font-bold flex items-center justify-center gap-2 nav-active">🎯 Strategy</button>
-            <button onclick="switchTab('simulation')" id="btn-simulation" class="flex-1 py-4 px-6 text-sm font-bold flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-50">⚙️ Simulation</button>
-            <button onclick="switchTab('intelligence')" id="btn-intelligence" class="flex-1 py-4 px-6 text-sm font-bold flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-50">🧠 Intelligence</button>
-            <button onclick="switchTab('reports')" id="btn-reports" class="flex-1 py-4 px-6 text-sm font-bold flex items-center justify-center gap-2 text-slate-500 hover:bg-slate-50">📑 Reports</button>
+    <div class="max-w-5xl mx-auto mt-8 bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
+        
+        <div class="flex border-b bg-white overflow-x-auto">
+            <button onclick="showTab('dashboard')" id="tab-dashboard" class="flex-1 p-5 font-bold active-tab">Dashboard</button>
+            <button onclick="showTab('analytics')" id="tab-analytics" class="flex-1 p-5 font-bold text-slate-400">Sales Analytics</button>
+            <button onclick="showTab('planner')" id="tab-planner" class="flex-1 p-5 font-bold text-slate-400">Growth Planner</button>
         </div>
 
         <div class="p-8">
-            <div id="strategy" class="tab-content active">
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="col-span-2 space-y-6">
-                        <h2 class="text-2xl font-extrabold text-slate-800">Operational Roadmap</h2>
-                        <div class="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-xl">
-                            <h3 class="font-bold text-indigo-900 mb-2">How this tool scales your business:</h3>
-                            <p class="text-indigo-800 text-sm leading-relaxed">This system analyzes your Whop store's unit economics. By defining your MRR and Churn, it generates a 36-month hiring and marketing workflow. <strong>Use the Intelligence tab to see AI-driven hiring alerts.</strong></p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="p-4 border rounded-2xl bg-white shadow-sm">
-                                <span class="text-2xl">📈</span>
-                                <h4 class="font-bold mt-2">Scale Marketing</h4>
-                                <p class="text-xs text-slate-500">Automated CAC vs LTV optimization.</p>
-                            </div>
-                            <div class="p-4 border rounded-2xl bg-white shadow-sm">
-                                <span class="text-2xl">👥</span>
-                                <h4 class="font-bold mt-2">Hiring Triggers</h4>
-                                <p class="text-xs text-slate-500">Know exactly when to add staff.</p>
-                            </div>
-                        </div>
+            <div id="dashboard" class="tab-content active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-6 bg-slate-100 rounded-3xl">
+                        <p class="text-xs font-bold text-slate-500 uppercase">Total Revenue (Live)</p>
+                        <h2 id="live-rev" class="text-3xl font-black mt-2">$0.00</h2>
                     </div>
-                    <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl">
-                        <h3 class="font-bold text-lg mb-4">Quick Insights</h3>
-                        <div class="space-y-4">
-                            <div class="border-b border-white/10 pb-2">
-                                <p class="text-xs opacity-60">Est. Net Worth (3yr)</p>
-                                <p id="side-worth" class="text-xl font-black">$0</p>
-                            </div>
-                            <div class="border-b border-white/10 pb-2">
-                                <p class="text-xs opacity-60">Avg. Monthly Profit</p>
-                                <p id="side-profit" class="text-xl font-black text-emerald-400">$0</p>
-                            </div>
-                        </div>
-                        <button onclick="switchTab('simulation')" class="w-full mt-6 bg-indigo-500 hover:bg-indigo-400 py-3 rounded-xl font-bold transition-all">Start Simulation</button>
+                    <div class="p-6 bg-slate-100 rounded-3xl">
+                        <p class="text-xs font-bold text-slate-500 uppercase">Active Subscriptions</p>
+                        <h2 id="live-subs" class="text-3xl font-black mt-2">0</h2>
+                    </div>
+                    <div class="p-6 bg-orange-50 rounded-3xl border border-orange-100">
+                        <p class="text-xs font-bold text-orange-600 uppercase">Growth Potential</p>
+                        <h2 class="text-3xl font-black mt-2 text-orange-700">+24%</h2>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-3xl border h-80">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+
+            <div id="analytics" class="tab-content">
+                <h3 class="text-xl font-black mb-4">Store Performance Metrics</h3>
+                <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 mb-6">
+                    <p class="text-blue-800 font-medium">ðŸ’¡ <strong>Insight:</strong> Your "Premium Plan" has the lowest churn rate. Consider increasing marketing spend there.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 border rounded-xl">
+                        <span class="block text-slate-400 text-xs">Customer LTV</span>
+                        <span class="text-xl font-bold">$450.00</span>
+                    </div>
+                    <div class="p-4 border rounded-xl">
+                        <span class="block text-slate-400 text-xs">Churn Rate</span>
+                        <span class="text-xl font-bold text-red-500">3.2%</span>
                     </div>
                 </div>
             </div>
 
-            <div id="simulation" class="tab-content">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-black">Simulation Parameters</h2>
-                    <button onclick="runCalculation()" class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition-transform">Run Model</button>
+            <div id="planner" class="tab-content space-y-6">
+                <div class="bg-slate-900 text-white p-6 rounded-3xl">
+                    <h3 class="font-bold">Manual Adjustment Mode</h3>
+                    <p class="text-xs opacity-70">Adjust metrics to see how they impact your Whop business.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <label class="text-sm font-bold text-slate-700">Initial Monthly Revenue</label>
-                        <input type="number" id="mrr" value="5000" class="w-24 p-2 rounded-md border font-bold text-right input-focus">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Monthly Ad Spend ($)</label>
+                        <input type="number" id="ad-spend" value="500" class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none">
                     </div>
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <label class="text-sm font-bold text-slate-700">Growth Rate (%)</label>
-                        <input type="number" id="growth" value="12" class="w-24 p-2 rounded-md border font-bold text-right input-focus">
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <label class="text-sm font-bold text-slate-700">Churn Rate (%)</label>
-                        <input type="number" id="churn" value="4" class="w-24 p-2 rounded-md border font-bold text-right input-focus">
-                    </div>
-                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <label class="text-sm font-bold text-slate-700">Founder Salary ($)</label>
-                        <input type="number" id="salary" value="3000" class="w-24 p-2 rounded-md border font-bold text-right input-focus">
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Target Growth (%)</label>
+                        <input type="number" id="target-growth" value="15" class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none">
                     </div>
                 </div>
-            </div>
-
-            <div id="intelligence" class="tab-content">
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="space-y-6">
-                        <div class="p-6 bg-white border-2 border-indigo-100 rounded-[2rem]">
-                            <h3 class="font-black text-indigo-900 mb-4">Strategic Alerts</h3>
-                            <div id="alerts-container" class="space-y-3">
-                                <p class="text-slate-400 italic">Run simulation to see alerts...</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="h-80 bg-slate-50 rounded-[2rem] p-6 border shadow-inner">
-                        <canvas id="growthChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div id="reports" class="tab-content">
-                <div class="overflow-x-auto rounded-2xl border">
-                    <table class="w-full text-sm">
-                        <thead class="bg-slate-900 text-white font-bold">
-                            <tr>
-                                <th class="p-4 text-left">Period</th>
-                                <th class="p-4">Revenue</th>
-                                <th class="p-4">Expenses</th>
-                                <th class="p-4">Net Profit</th>
-                                <th class="p-4">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="report-body" class="divide-y font-medium"></tbody>
-                    </table>
-                </div>
+                <button onclick="updateData()" class="w-full bg-black text-white p-5 rounded-2xl font-black hover:bg-slate-800 transition">UPDATE PROJECTIONS</button>
             </div>
         </div>
     </div>
 
     <script>
-        let chart = null;
+        let myChart = null;
 
-        // LOAD DATA ON STARTUP
-        window.onload = function() {
-            const savedData = localStorage.getItem('whop_growth_pro_v1');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                document.getElementById('mrr').value = data.mrr;
-                document.getElementById('growth').value = data.growth;
-                document.getElementById('churn').value = data.churn;
-                document.getElementById('salary').value = data.salary;
-                console.log("Business configurations restored.");
-            }
-            runCalculation();
-        };
-
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('nav button, .flex button').forEach(b => b.classList.remove('nav-active', 'text-indigo-600'));
+        function showTab(tabId) {
+            // Hide all
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav + div button').forEach(el => el.classList.remove('active-tab', 'text-slate-400'));
             
-            document.getElementById(id).classList.add('active');
-            document.getElementById('btn-' + id).classList.add('nav-active');
-            if(id === 'intelligence' || id === 'reports') runCalculation();
+            // Show selected
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active-tab');
+            
+            if(tabId === 'dashboard') initChart();
         }
 
-        function runCalculation() {
-            const mrr = parseFloat(document.getElementById('mrr').value);
-            const growthInput = parseFloat(document.getElementById('growth').value);
-            const churnInput = parseFloat(document.getElementById('churn').value);
-            const salary = parseFloat(document.getElementById('salary').value);
-
-            // SAVE DATA AUTOMATICALLY
-            const dataToSave = { 
-                mrr, 
-                growth: growthInput, 
-                churn: churnInput, 
-                salary 
-            };
-            localStorage.setItem('whop_growth_pro_v1', JSON.stringify(dataToSave));
-
-            const growth = growthInput / 100;
-            const churn = churnInput / 100;
-            
-            let currentMrr = mrr;
-            let totalProfit = 0;
-            let reportHtml = '';
-            let chartLabels = [];
-            let chartData = [];
-            let alerts = [];
-
-            for (let m = 1; m <= 36; m++) {
-                let expenses = salary + (currentMrr * 0.15); // Dynamic OpEx
-                let profit = currentMrr - expenses;
-                totalProfit += profit;
-
-                chartLabels.push('M' + m);
-                chartData.push(currentMrr.toFixed(0));
-
-                // Professional Workflow Logic
-                if (m === 1 && profit < 0) {
-                    alerts.push(`<div class="p-3 bg-amber-50 text-amber-800 rounded-lg text-xs font-bold border-l-4 border-amber-500">⚠️ OPERATIONAL BURN: Initial expenses exceed revenue. Ensure cash buffer.</div>`);
-                }
-                if (currentMrr > 12000 && alerts.length < 2) {
-                    alerts.push(`<div class="p-3 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-bold border-l-4 border-emerald-500">🚀 HIRING TRIGGER: Revenue suggests capacity for a Part-time Assistant.</div>`);
-                }
-                if (currentMrr > 30000 && alerts.length < 3) {
-                    alerts.push(`<div class="p-3 bg-indigo-50 text-indigo-800 rounded-lg text-xs font-bold border-l-4 border-indigo-500">💎 SCALE NOTIFICATION: High growth detected. Review tax optimization.</div>`);
-                }
-
-                reportHtml += `<tr>
-                    <td class="p-4 font-bold text-slate-500">Month ${m}</td>
-                    <td class="p-4 text-center font-bold text-indigo-600">$${currentMrr.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
-                    <td class="p-4 text-center text-rose-500">-$${expenses.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
-                    <td class="p-4 text-center font-black ${profit > 0 ? 'text-emerald-600' : 'text-rose-600'}">$${profit.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
-                    <td class="p-4 text-center"><span class="px-2 py-1 bg-slate-100 rounded text-[10px] font-black uppercase text-slate-500">In Review</span></td>
-                </tr>`;
-
-                currentMrr *= (1 + (growth - churn));
-            }
-
-            document.getElementById('report-body').innerHTML = reportHtml;
-            document.getElementById('side-worth').innerText = '$' + (totalProfit * 1.5).toLocaleString(undefined, {maximumFractionDigits:0});
-            document.getElementById('side-profit').innerText = '$' + (totalProfit / 36).toLocaleString(undefined, {maximumFractionDigits:0});
-            document.getElementById('alerts-container').innerHTML = alerts.join('') || '<p class="text-emerald-600 font-bold text-sm">✅ All operations within healthy parameters.</p>';
-
-            updateChart(chartLabels, chartData);
+        function simulateConnect() {
+            alert("Connecting to Whop API... Fetching store data.");
+            document.getElementById('live-rev').innerText = "$12,450.00";
+            document.getElementById('live-subs').innerText = "142";
+            updateData();
         }
 
-        function updateChart(labels, data) {
-            const ctx = document.getElementById('growthChart').getContext('2d');
-            if (chart) chart.destroy();
-            chart = new Chart(ctx, {
-                type: 'line',
+        function updateData() {
+            const rev = 12450;
+            const growth = document.getElementById('target-growth').value / 100;
+            let data = [];
+            let labels = [];
+
+            for(let i=1; i<=6; i++) {
+                labels.push("Month " + i);
+                data.push(rev * Math.pow((1+growth), i));
+            }
+            renderChart(labels, data);
+        }
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Projected Revenue',
+                        label: 'Projected Sales',
                         data: data,
-                        borderColor: '#6366f1',
-                        borderWidth: 4,
-                        fill: true,
-                        backgroundColor: 'rgba(99, 102, 241, 0.05)',
-                        tension: 0.4,
-                        pointRadius: 0
+                        backgroundColor: '#ff5a1f',
+                        borderRadius: 10
                     }]
                 },
-                options: { 
-                    responsive: true, 
+                options: {
+                    responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { ticks: { callback: value => '$' + value } }
-                    }
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
+
+        // Initialize
+        window.onload = () => {
+            showTab('dashboard');
+            updateData();
+        };
     </script>
 </body>
 </html>
