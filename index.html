@@ -142,19 +142,46 @@
     <script>
         let chart = null;
 
+        // LOAD DATA ON STARTUP
+        window.onload = function() {
+            const savedData = localStorage.getItem('whop_growth_pro_v1');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                document.getElementById('mrr').value = data.mrr;
+                document.getElementById('growth').value = data.growth;
+                document.getElementById('churn').value = data.churn;
+                document.getElementById('salary').value = data.salary;
+                console.log("Business configurations restored.");
+            }
+            runCalculation();
+        };
+
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('nav button, .flex button').forEach(b => b.classList.remove('nav-active', 'text-indigo-600'));
             
             document.getElementById(id).classList.add('active');
             document.getElementById('btn-' + id).classList.add('nav-active');
-            if(id === 'intelligence') runCalculation();
+            if(id === 'intelligence' || id === 'reports') runCalculation();
         }
 
         function runCalculation() {
             const mrr = parseFloat(document.getElementById('mrr').value);
-            const growth = parseFloat(document.getElementById('growth').value) / 100;
+            const growthInput = parseFloat(document.getElementById('growth').value);
+            const churnInput = parseFloat(document.getElementById('churn').value);
             const salary = parseFloat(document.getElementById('salary').value);
+
+            // SAVE DATA AUTOMATICALLY
+            const dataToSave = { 
+                mrr, 
+                growth: growthInput, 
+                churn: churnInput, 
+                salary 
+            };
+            localStorage.setItem('whop_growth_pro_v1', JSON.stringify(dataToSave));
+
+            const growth = growthInput / 100;
+            const churn = churnInput / 100;
             
             let currentMrr = mrr;
             let totalProfit = 0;
@@ -164,32 +191,39 @@
             let alerts = [];
 
             for (let m = 1; m <= 36; m++) {
-                let expenses = salary + (currentMrr * 0.2); // Base expenses
+                let expenses = salary + (currentMrr * 0.15); // Dynamic OpEx
                 let profit = currentMrr - expenses;
                 totalProfit += profit;
 
                 chartLabels.push('M' + m);
                 chartData.push(currentMrr.toFixed(0));
 
-                // Intelligent Workflow Logic
-                if (m === 1 && profit < 0) alerts.push(`<div class="p-3 bg-amber-50 text-amber-800 rounded-lg text-xs font-bold border-l-4 border-amber-500">⚠️ MONTH 1: Initial burn detected. Maintain cash reserves.</div>`);
-                if (currentMrr > 15000 && m < 12) alerts.push(`<div class="p-3 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-bold border-l-4 border-emerald-500">🚀 SCALE ALERT: Revenue > $15k. Ideal time to hire a VA.</div>`);
+                // Professional Workflow Logic
+                if (m === 1 && profit < 0) {
+                    alerts.push(`<div class="p-3 bg-amber-50 text-amber-800 rounded-lg text-xs font-bold border-l-4 border-amber-500">⚠️ OPERATIONAL BURN: Initial expenses exceed revenue. Ensure cash buffer.</div>`);
+                }
+                if (currentMrr > 12000 && alerts.length < 2) {
+                    alerts.push(`<div class="p-3 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-bold border-l-4 border-emerald-500">🚀 HIRING TRIGGER: Revenue suggests capacity for a Part-time Assistant.</div>`);
+                }
+                if (currentMrr > 30000 && alerts.length < 3) {
+                    alerts.push(`<div class="p-3 bg-indigo-50 text-indigo-800 rounded-lg text-xs font-bold border-l-4 border-indigo-500">💎 SCALE NOTIFICATION: High growth detected. Review tax optimization.</div>`);
+                }
 
                 reportHtml += `<tr>
-                    <td class="p-4 font-bold">Month ${m}</td>
-                    <td class="p-4 text-center">$${currentMrr.toLocaleString()}</td>
-                    <td class="p-4 text-center text-rose-500">-$${expenses.toLocaleString()}</td>
-                    <td class="p-4 text-center font-black text-emerald-600">$${profit.toLocaleString()}</td>
-                    <td class="p-4 text-center"><span class="px-2 py-1 bg-slate-100 rounded text-[10px] font-black uppercase">Stable</span></td>
+                    <td class="p-4 font-bold text-slate-500">Month ${m}</td>
+                    <td class="p-4 text-center font-bold text-indigo-600">$${currentMrr.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="p-4 text-center text-rose-500">-$${expenses.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="p-4 text-center font-black ${profit > 0 ? 'text-emerald-600' : 'text-rose-600'}">$${profit.toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                    <td class="p-4 text-center"><span class="px-2 py-1 bg-slate-100 rounded text-[10px] font-black uppercase text-slate-500">In Review</span></td>
                 </tr>`;
 
-                currentMrr *= (1 + growth);
+                currentMrr *= (1 + (growth - churn));
             }
 
             document.getElementById('report-body').innerHTML = reportHtml;
-            document.getElementById('side-worth').innerText = '$' + (totalProfit * 1.2).toLocaleString(undefined, {maximumFractionDigits:0});
+            document.getElementById('side-worth').innerText = '$' + (totalProfit * 1.5).toLocaleString(undefined, {maximumFractionDigits:0});
             document.getElementById('side-profit').innerText = '$' + (totalProfit / 36).toLocaleString(undefined, {maximumFractionDigits:0});
-            document.getElementById('alerts-container').innerHTML = alerts.slice(0, 3).join('') || '<p class="text-emerald-600 font-bold text-sm">✅ Business health is optimal.</p>';
+            document.getElementById('alerts-container').innerHTML = alerts.join('') || '<p class="text-emerald-600 font-bold text-sm">✅ All operations within healthy parameters.</p>';
 
             updateChart(chartLabels, chartData);
         }
@@ -202,21 +236,26 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Projected MRR',
+                        label: 'Projected Revenue',
                         data: data,
                         borderColor: '#6366f1',
                         borderWidth: 4,
                         fill: true,
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        tension: 0.4
+                        backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                        tension: 0.4,
+                        pointRadius: 0
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { callback: value => '$' + value } }
+                    }
+                }
             });
         }
-
-        // Initial run
-        runCalculation();
     </script>
 </body>
 </html>
