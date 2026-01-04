@@ -4,472 +4,643 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whop Business Intelligence Hub</title>
+    <title>Whop Revenue Tracker & Alerts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .active-tab { 
-            border-bottom: 3px solid #ff5a1f; 
-            color: #ff5a1f;
-            background: #fff5f2;
-        }
-        .metric-card {
-            transition: all 0.3s ease;
-        }
-        .metric-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .loading {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .connected {
-            background: #10b981;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+<body class="bg-slate-900 min-h-screen text-white">
 
-    <!-- Navigation -->
-    <nav class="bg-black text-white p-4 shadow-2xl sticky top-0 z-50">
+    <nav class="bg-black border-b border-slate-800 p-4 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="bg-[#ff5a1f] w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg">W</div>
+                <div class="bg-orange-500 w-10 h-10 rounded-xl flex items-center justify-center font-black">W</div>
                 <div>
-                    <span class="font-black tracking-tight text-xl block">BI Hub</span>
-                    <span class="text-xs text-slate-400">Business Intelligence</span>
+                    <h1 class="font-black text-lg">Revenue Tracker</h1>
+                    <p class="text-xs text-slate-400">Track & Alert System</p>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                <div id="connection-status" class="hidden items-center gap-2 bg-slate-800 px-4 py-2 rounded-full text-xs">
-                    <div class="w-2 h-2 rounded-full bg-green-500 connected"></div>
-                    <span>Connected to Whop</span>
-                </div>
-                <button onclick="connectWhopAPI()" id="connect-btn" class="bg-[#ff5a1f] px-6 py-2.5 rounded-full text-sm font-bold hover:bg-orange-600 transition-all transform hover:scale-105 active:scale-95">
-                    🔗 Connect Whop API
+            <div class="flex items-center gap-3">
+                <span id="user-badge" class="text-xs bg-slate-800 px-3 py-1.5 rounded-full hidden"></span>
+                <button onclick="showSettings()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm transition">
+                    ⚙️ Settings
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <div class="max-w-6xl mx-auto mt-8 mb-12 px-4">
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
         
-        <!-- API Key Input Section -->
-        <div id="api-setup" class="bg-white shadow-2xl rounded-3xl p-8 mb-8 border border-slate-200">
-            <div class="max-w-2xl mx-auto text-center">
-                <div class="bg-orange-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <span class="text-3xl">🔑</span>
+        <!-- Setup Screen -->
+        <div id="setup-screen" class="max-w-2xl mx-auto">
+            <div class="bg-slate-800 rounded-3xl p-8 border border-slate-700">
+                <div class="text-center mb-8">
+                    <div class="bg-orange-500/20 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-4xl">🚀</span>
+                    </div>
+                    <h2 class="text-3xl font-black mb-3">Set Up Your Revenue Tracker</h2>
+                    <p class="text-slate-400">Get real-time alerts and track your Whop business growth</p>
                 </div>
-                <h2 class="text-2xl font-black mb-2">Connect Your Whop Store</h2>
-                <p class="text-slate-600 mb-6">Enter your Whop API key to unlock real-time business insights</p>
-                
-                <div class="space-y-4">
-                    <input 
-                        type="password" 
-                        id="api-key-input" 
-                        placeholder="Enter your Whop API Key (e.g., whop_xxxxxxxxxxxxx)" 
-                        class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-orange-500 focus:outline-none transition-all"
-                    >
-                    <button onclick="validateAndConnect()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-2xl font-bold hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]">
-                        Connect & Analyze
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Your Name / Business Name</label>
+                        <input type="text" id="user-name" placeholder="e.g., John's Premium Community" 
+                            class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Current Monthly Revenue ($)</label>
+                        <input type="number" id="current-revenue" placeholder="e.g., 5000" 
+                            class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none transition">
+                        <p class="text-xs text-slate-500 mt-2">💡 We'll track your growth from this baseline</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Revenue Goal This Month ($)</label>
+                        <input type="number" id="goal-revenue" placeholder="e.g., 7500" 
+                            class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Active Members Count</label>
+                        <input type="number" id="member-count" placeholder="e.g., 150" 
+                            class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none transition">
+                    </div>
+
+                    <button onclick="completeSetup()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 p-5 rounded-xl font-black text-lg hover:shadow-2xl hover:shadow-orange-500/50 transition transform hover:scale-[1.02] active:scale-[0.98]">
+                        🎯 Start Tracking
                     </button>
-                </div>
-                
-                <div class="mt-6 text-left bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <p class="text-sm font-semibold text-blue-900 mb-2">📘 How to get your API key:</p>
-                    <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                        <li>Go to <a href="https://whop.com/settings/developer" target="_blank" class="underline font-semibold">Whop Developer Settings</a></li>
-                        <li>Create a new API key with "Read" permissions</li>
-                        <li>Copy the key and paste it above</li>
-                    </ol>
                 </div>
             </div>
         </div>
 
-        <!-- Main Dashboard (Hidden until connected) -->
-        <div id="main-dashboard" class="hidden">
-            <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
-                
-                <!-- Tabs -->
-                <div class="flex border-b bg-slate-50 overflow-x-auto">
-                    <button onclick="switchTab('overview')" id="tab-overview" class="flex-1 p-5 font-bold transition-all active-tab">
-                        📊 Overview
+        <!-- Main Dashboard -->
+        <div id="main-dashboard" class="hidden space-y-6">
+            
+            <!-- Welcome Header -->
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-3xl p-8">
+                <h2 class="text-3xl font-black mb-2">Welcome back, <span id="welcome-name">Creator</span>! 👋</h2>
+                <p class="text-orange-100" id="welcome-message">Let's track your progress today</p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-slate-800 rounded-3xl p-6 border border-slate-700">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <span>⚡</span> Quick Actions
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="logSale()" class="bg-green-600 hover:bg-green-700 p-4 rounded-xl font-bold transition transform hover:scale-105 active:scale-95">
+                        💰 Log New Sale
                     </button>
-                    <button onclick="switchTab('revenue')" id="tab-revenue" class="flex-1 p-5 font-bold text-slate-500 transition-all hover:bg-slate-100">
-                        💰 Revenue Analytics
+                    <button onclick="logMember()" class="bg-blue-600 hover:bg-blue-700 p-4 rounded-xl font-bold transition transform hover:scale-105 active:scale-95">
+                        👤 Add Member
                     </button>
-                    <button onclick="switchTab('customers')" id="tab-customers" class="flex-1 p-5 font-bold text-slate-500 transition-all hover:bg-slate-100">
-                        👥 Customers
+                    <button onclick="logCancellation()" class="bg-red-600 hover:bg-red-700 p-4 rounded-xl font-bold transition transform hover:scale-105 active:scale-95">
+                        ❌ Log Cancellation
                     </button>
-                    <button onclick="switchTab('insights')" id="tab-insights" class="flex-1 p-5 font-bold text-slate-500 transition-all hover:bg-slate-100">
-                        💡 AI Insights
-                    </button>
-                </div>
-
-                <!-- Tab Content -->
-                <div class="p-8">
-                    
-                    <!-- Overview Tab -->
-                    <div id="content-overview" class="tab-content active">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                            <div class="metric-card p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-3xl border border-orange-200">
-                                <p class="text-xs font-bold text-orange-700 uppercase mb-2">Total Revenue</p>
-                                <h2 id="total-revenue" class="text-3xl font-black text-orange-900">$0</h2>
-                                <p class="text-xs text-orange-600 mt-2">↑ All-time earnings</p>
-                            </div>
-                            <div class="metric-card p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl border border-blue-200">
-                                <p class="text-xs font-bold text-blue-700 uppercase mb-2">Active Members</p>
-                                <h2 id="active-members" class="text-3xl font-black text-blue-900">0</h2>
-                                <p class="text-xs text-blue-600 mt-2">Current subscribers</p>
-                            </div>
-                            <div class="metric-card p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-3xl border border-green-200">
-                                <p class="text-xs font-bold text-green-700 uppercase mb-2">MRR</p>
-                                <h2 id="mrr" class="text-3xl font-black text-green-900">$0</h2>
-                                <p class="text-xs text-green-600 mt-2">Monthly recurring</p>
-                            </div>
-                            <div class="metric-card p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl border border-purple-200">
-                                <p class="text-xs font-bold text-purple-700 uppercase mb-2">Avg. Order Value</p>
-                                <h2 id="avg-order" class="text-3xl font-black text-purple-900">$0</h2>
-                                <p class="text-xs text-purple-600 mt-2">Per transaction</p>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="bg-white border-2 border-slate-200 rounded-3xl p-6">
-                                <h3 class="font-bold text-lg mb-4">Revenue Trend (Last 30 Days)</h3>
-                                <canvas id="revenueChart" class="w-full" style="height: 250px;"></canvas>
-                            </div>
-                            <div class="bg-white border-2 border-slate-200 rounded-3xl p-6">
-                                <h3 class="font-bold text-lg mb-4">Top Products</h3>
-                                <div id="top-products" class="space-y-3">
-                                    <p class="text-slate-400 text-sm">Loading products...</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Revenue Tab -->
-                    <div id="content-revenue" class="tab-content">
-                        <div class="mb-6">
-                            <h3 class="text-2xl font-black mb-2">Revenue Breakdown</h3>
-                            <p class="text-slate-600">Detailed analysis of your income streams</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                            <div class="p-6 bg-slate-100 rounded-2xl">
-                                <span class="text-xs font-bold text-slate-500 uppercase">This Month</span>
-                                <h3 id="month-revenue" class="text-2xl font-black mt-1">$0</h3>
-                            </div>
-                            <div class="p-6 bg-slate-100 rounded-2xl">
-                                <span class="text-xs font-bold text-slate-500 uppercase">Last Month</span>
-                                <h3 id="last-month-revenue" class="text-2xl font-black mt-1">$0</h3>
-                            </div>
-                            <div class="p-6 bg-green-50 rounded-2xl border border-green-200">
-                                <span class="text-xs font-bold text-green-700 uppercase">Growth</span>
-                                <h3 id="growth-rate" class="text-2xl font-black mt-1 text-green-700">0%</h3>
-                            </div>
-                        </div>
-
-                        <div class="bg-white border-2 border-slate-200 rounded-3xl p-6">
-                            <canvas id="revenueDetailChart" style="height: 300px;"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Customers Tab -->
-                    <div id="content-customers" class="tab-content">
-                        <div class="mb-6">
-                            <h3 class="text-2xl font-black mb-2">Customer Analytics</h3>
-                            <p class="text-slate-600">Understanding your member base</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="p-6 bg-slate-100 rounded-2xl">
-                                <span class="text-xs font-bold text-slate-500 uppercase">Customer Lifetime Value</span>
-                                <h3 id="ltv" class="text-3xl font-black mt-2">$0</h3>
-                                <p class="text-xs text-slate-500 mt-2">Average per customer</p>
-                            </div>
-                            <div class="p-6 bg-slate-100 rounded-2xl">
-                                <span class="text-xs font-bold text-slate-500 uppercase">Churn Rate</span>
-                                <h3 id="churn" class="text-3xl font-black mt-2">0%</h3>
-                                <p class="text-xs text-slate-500 mt-2">Monthly cancellation rate</p>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 bg-white border-2 border-slate-200 rounded-3xl p-6">
-                            <h4 class="font-bold mb-4">Recent Customers</h4>
-                            <div id="recent-customers" class="space-y-2">
-                                <p class="text-slate-400 text-sm">Loading customer data...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Insights Tab -->
-                    <div id="content-insights" class="tab-content">
-                        <div class="mb-6">
-                            <h3 class="text-2xl font-black mb-2">AI-Powered Insights</h3>
-                            <p class="text-slate-600">Smart recommendations to grow your business</p>
-                        </div>
-
-                        <div id="ai-insights" class="space-y-4">
-                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-6">
-                                <div class="flex items-start gap-4">
-                                    <span class="text-3xl">🤖</span>
-                                    <div>
-                                        <h4 class="font-bold text-purple-900 mb-2">Analyzing your data...</h4>
-                                        <p class="text-purple-700 text-sm">AI insights will appear here once we process your Whop store data.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-2">Today's Revenue</p>
+                    <h3 id="today-revenue" class="text-3xl font-black text-green-400">$0</h3>
+                    <p class="text-xs text-slate-500 mt-2">+<span id="today-sales">0</span> sales</p>
+                </div>
+                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-2">This Month</p>
+                    <h3 id="month-revenue" class="text-3xl font-black">$0</h3>
+                    <p class="text-xs text-slate-500 mt-2"><span id="goal-progress">0</span>% to goal</p>
+                </div>
+                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-2">Active Members</p>
+                    <h3 id="current-members" class="text-3xl font-black text-blue-400">0</h3>
+                    <p class="text-xs text-green-400 mt-2">+<span id="new-members-today">0</span> today</p>
+                </div>
+                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-2">Avg Sale Value</p>
+                    <h3 id="avg-sale" class="text-3xl font-black text-purple-400">$0</h3>
+                    <p class="text-xs text-slate-500 mt-2">Per transaction</p>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="bg-slate-800 rounded-3xl p-6 border border-slate-700">
+                <h3 class="font-bold text-lg mb-4">Revenue Progress (Last 7 Days)</h3>
+                <canvas id="revenueChart" style="height: 250px;"></canvas>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-800 rounded-3xl p-6 border border-slate-700">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span>📊</span> Recent Activity
+                    </h3>
+                    <div id="activity-feed" class="space-y-2 max-h-80 overflow-y-auto">
+                        <p class="text-slate-500 text-sm text-center py-8">No activity yet. Log your first sale!</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 rounded-3xl p-6 border border-slate-700">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span>🎯</span> Goals & Milestones
+                    </h3>
+                    <div id="milestones" class="space-y-4">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div class="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-3xl p-6 border border-purple-700">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                    <span>🔔</span> Smart Alerts & Notifications
+                </h3>
+                <div id="alerts-list" class="space-y-3">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
         </div>
 
     </div>
 
+    <!-- Modals -->
+    <div id="sale-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 rounded-3xl p-8 max-w-md w-full border border-slate-700 slide-in">
+            <h3 class="text-2xl font-black mb-6">💰 Log New Sale</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Sale Amount ($)</label>
+                    <input type="number" id="sale-amount" placeholder="e.g., 49.99" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Product/Plan Name (Optional)</label>
+                    <input type="text" id="sale-product" placeholder="e.g., Premium Membership" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="saveSale()" class="flex-1 bg-green-600 hover:bg-green-700 p-4 rounded-xl font-bold transition">
+                        Save Sale
+                    </button>
+                    <button onclick="closeModal('sale-modal')" class="flex-1 bg-slate-700 hover:bg-slate-600 p-4 rounded-xl font-bold transition">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="member-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 rounded-3xl p-8 max-w-md w-full border border-slate-700 slide-in">
+            <h3 class="text-2xl font-black mb-6">👤 Add New Member</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Member Email (Optional)</label>
+                    <input type="email" id="member-email" placeholder="user@example.com" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-2">Plan/Tier</label>
+                    <input type="text" id="member-plan" placeholder="e.g., Premium" class="w-full p-4 bg-slate-900 border border-slate-700 rounded-xl focus:border-orange-500 focus:outline-none">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="saveMember()" class="flex-1 bg-blue-600 hover:bg-blue-700 p-4 rounded-xl font-bold transition">
+                        Add Member
+                    </button>
+                    <button onclick="closeModal('member-modal')" class="flex-1 bg-slate-700 hover:bg-slate-600 p-4 rounded-xl font-bold transition">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 rounded-3xl p-8 max-w-md w-full border border-slate-700 slide-in">
+            <h3 class="text-2xl font-black mb-6">⚙️ Settings</h3>
+            <div class="space-y-4">
+                <button onclick="resetData()" class="w-full bg-red-600 hover:bg-red-700 p-4 rounded-xl font-bold transition">
+                    🗑️ Reset All Data
+                </button>
+                <button onclick="exportData()" class="w-full bg-green-600 hover:bg-green-700 p-4 rounded-xl font-bold transition">
+                    📥 Export Data (JSON)
+                </button>
+                <button onclick="closeModal('settings-modal')" class="w-full bg-slate-700 hover:bg-slate-600 p-4 rounded-xl font-bold transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let whopData = null;
-        let charts = {};
+        let userData = null;
+        let revenueChart = null;
 
-        // Tab switching with proper event handling
-        function switchTab(tabName) {
-            // Remove active from all tabs
-            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
-                btn.classList.remove('active-tab', 'bg-slate-50');
-                btn.classList.add('text-slate-500');
-            });
-            
-            // Hide all content
-            document.querySelectorAll('[id^="content-"]').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Activate selected
-            const activeBtn = document.getElementById('tab-' + tabName);
-            const activeContent = document.getElementById('content-' + tabName);
-            
-            if (activeBtn && activeContent) {
-                activeBtn.classList.add('active-tab');
-                activeBtn.classList.remove('text-slate-500');
-                activeContent.classList.add('active');
+        // Initialize app
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadUserData();
+        });
+
+        // Load user data from storage
+        async function loadUserData() {
+            try {
+                const result = await window.storage.get('whop-tracker-user');
+                if (result && result.value) {
+                    userData = JSON.parse(result.value);
+                    showDashboard();
+                } else {
+                    document.getElementById('setup-screen').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('setup-screen').classList.remove('hidden');
             }
         }
 
-        // Connect to Whop API
-        async function connectWhopAPI() {
-            const btn = document.getElementById('connect-btn');
-            btn.innerHTML = '<span class="loading"></span> Connecting...';
-            btn.disabled = true;
-            
-            // Simulate API connection
-            setTimeout(() => {
-                document.getElementById('api-setup').style.display = 'none';
-                document.getElementById('main-dashboard').classList.remove('hidden');
-                document.getElementById('connection-status').classList.remove('hidden');
-                document.getElementById('connection-status').classList.add('flex');
-                
-                btn.innerHTML = '✓ Connected';
-                btn.classList.add('bg-green-600');
-                
-                // Load demo data
-                loadWhopData();
-            }, 1500);
-        }
+        // Complete setup
+        async function completeSetup() {
+            const name = document.getElementById('user-name').value.trim();
+            const currentRev = parseFloat(document.getElementById('current-revenue').value) || 0;
+            const goalRev = parseFloat(document.getElementById('goal-revenue').value) || 0;
+            const members = parseInt(document.getElementById('member-count').value) || 0;
 
-        // Validate and connect with API key
-        function validateAndConnect() {
-            const apiKey = document.getElementById('api-key-input').value.trim();
-            
-            if (!apiKey) {
-                alert('⚠️ Please enter your Whop API key');
+            if (!name) {
+                alert('⚠️ Please enter your name or business name');
                 return;
             }
-            
-            if (!apiKey.startsWith('whop_')) {
-                alert('⚠️ Invalid API key format. Should start with "whop_"');
-                return;
-            }
-            
-            connectWhopAPI();
-        }
 
-        // Load Whop data (simulated - replace with real API call)
-        async function loadWhopData() {
-            // Simulate API response
-            whopData = {
-                totalRevenue: 47850.00,
-                activeMembers: 342,
-                mrr: 8950.00,
-                avgOrder: 139.99,
-                monthRevenue: 12400.00,
-                lastMonthRevenue: 10200.00,
-                products: [
-                    { name: 'Premium Membership', sales: 145, revenue: 7250 },
-                    { name: 'VIP Access', sales: 89, revenue: 4450 },
-                    { name: 'Starter Pack', sales: 201, revenue: 2010 }
-                ],
-                recentCustomers: [
-                    { email: 'user***@gmail.com', joined: '2 hours ago', plan: 'Premium' },
-                    { email: 'member***@yahoo.com', joined: '5 hours ago', plan: 'VIP' }
-                ]
+            userData = {
+                name: name,
+                baselineRevenue: currentRev,
+                goalRevenue: goalRev,
+                members: members,
+                todayRevenue: 0,
+                monthRevenue: currentRev,
+                todaySales: 0,
+                newMembersToday: 0,
+                sales: [],
+                activities: [],
+                dailyRevenue: {},
+                setupDate: new Date().toISOString()
             };
-            
+
+            await saveUserData();
+            document.getElementById('setup-screen').classList.add('hidden');
+            showDashboard();
+        }
+
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('main-dashboard').classList.remove('hidden');
             updateDashboard();
         }
 
-        // Update dashboard with real data
-        function updateDashboard() {
-            if (!whopData) return;
-            
-            // Update metrics
-            document.getElementById('total-revenue').textContent = '$' + whopData.totalRevenue.toLocaleString();
-            document.getElementById('active-members').textContent = whopData.activeMembers.toLocaleString();
-            document.getElementById('mrr').textContent = '$' + whopData.mrr.toLocaleString();
-            document.getElementById('avg-order').textContent = '$' + whopData.avgOrder.toFixed(2);
-            
-            document.getElementById('month-revenue').textContent = '$' + whopData.monthRevenue.toLocaleString();
-            document.getElementById('last-month-revenue').textContent = '$' + whopData.lastMonthRevenue.toLocaleString();
-            
-            const growth = ((whopData.monthRevenue - whopData.lastMonthRevenue) / whopData.lastMonthRevenue * 100).toFixed(1);
-            document.getElementById('growth-rate').textContent = '+' + growth + '%';
-            
-            // Update products
-            const productsHTML = whopData.products.map((p, i) => `
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
-                    <div class="flex items-center gap-3">
-                        <span class="font-black text-lg text-slate-400">${i + 1}</span>
-                        <div>
-                            <p class="font-bold text-sm">${p.name}</p>
-                            <p class="text-xs text-slate-500">${p.sales} sales</p>
-                        </div>
-                    </div>
-                    <span class="font-bold text-green-600">$${p.revenue.toLocaleString()}</span>
-                </div>
-            `).join('');
-            document.getElementById('top-products').innerHTML = productsHTML;
-            
-            // Update customers
-            document.getElementById('ltv').textContent = '$' + (whopData.totalRevenue / whopData.activeMembers).toFixed(2);
-            document.getElementById('churn').textContent = '3.2%';
-            
-            const customersHTML = whopData.recentCustomers.map(c => `
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                    <div>
-                        <p class="font-medium text-sm">${c.email}</p>
-                        <p class="text-xs text-slate-500">${c.joined} • ${c.plan}</p>
-                    </div>
-                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Active</span>
-                </div>
-            `).join('');
-            document.getElementById('recent-customers').innerHTML = customersHTML;
-            
-            // Create charts
-            createCharts();
-            generateAIInsights();
-        }
-
-        // Create visualization charts
-        function createCharts() {
-            // Revenue trend chart
-            const ctx1 = document.getElementById('revenueChart');
-            if (ctx1 && !charts.revenue) {
-                charts.revenue = new Chart(ctx1, {
-                    type: 'line',
-                    data: {
-                        labels: ['Day 1', 'Day 7', 'Day 14', 'Day 21', 'Day 30'],
-                        datasets: [{
-                            label: 'Revenue',
-                            data: [8500, 9200, 10500, 11800, 12400],
-                            borderColor: '#ff5a1f',
-                            backgroundColor: 'rgba(255, 90, 31, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            y: { 
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: value => '$' + value.toLocaleString()
-                                }
-                            }
-                        }
-                    }
-                });
+        // Save user data
+        async function saveUserData() {
+            try {
+                await window.storage.set('whop-tracker-user', JSON.stringify(userData));
+            } catch (error) {
+                console.error('Save error:', error);
             }
         }
 
-        // Generate AI insights
-        function generateAIInsights() {
-            const insights = [
-                {
-                    icon: '📈',
-                    title: 'Strong Growth Trajectory',
-                    text: 'Your revenue is up 21.6% from last month. Continue current marketing efforts.',
-                    color: 'green'
-                },
-                {
-                    icon: '🎯',
-                    title: 'Top Performer: Premium Membership',
-                    text: 'This product generates 34% of total revenue. Consider upselling to existing members.',
-                    color: 'blue'
-                },
-                {
-                    icon: '⚠️',
-                    title: 'Churn Alert',
-                    text: '3.2% churn rate detected. Focus on member engagement and retention strategies.',
-                    color: 'orange'
-                }
-            ];
+        // Update dashboard
+        function updateDashboard() {
+            document.getElementById('welcome-name').textContent = userData.name;
+            document.getElementById('today-revenue').textContent = '$' + userData.todayRevenue.toFixed(2);
+            document.getElementById('today-sales').textContent = userData.todaySales;
+            document.getElementById('month-revenue').textContent = '$' + userData.monthRevenue.toFixed(2);
+            document.getElementById('current-members').textContent = userData.members;
+            document.getElementById('new-members-today').textContent = userData.newMembersToday;
             
-            const insightsHTML = insights.map(i => `
-                <div class="bg-gradient-to-r from-${i.color}-50 to-${i.color}-100 border-2 border-${i.color}-200 rounded-2xl p-6">
-                    <div class="flex items-start gap-4">
-                        <span class="text-3xl">${i.icon}</span>
-                        <div>
-                            <h4 class="font-bold text-${i.color}-900 mb-2">${i.title}</h4>
-                            <p class="text-${i.color}-700 text-sm">${i.text}</p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            document.getElementById('ai-insights').innerHTML = insightsHTML;
+            const avgSale = userData.sales.length > 0 
+                ? userData.sales.reduce((sum, s) => sum + s.amount, 0) / userData.sales.length 
+                : 0;
+            document.getElementById('avg-sale').textContent = '$' + avgSale.toFixed(2);
+
+            const progress = userData.goalRevenue > 0 
+                ? Math.min(100, (userData.monthRevenue / userData.goalRevenue * 100)).toFixed(1)
+                : 0;
+            document.getElementById('goal-progress').textContent = progress;
+
+            document.getElementById('user-badge').textContent = userData.name;
+            document.getElementById('user-badge').classList.remove('hidden');
+
+            updateActivityFeed();
+            updateMilestones();
+            updateAlerts();
+            updateChart();
         }
 
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', () => {
-            console.log('Whop BI Hub loaded successfully');
-        });
+        // Log sale
+        function logSale() {
+            document.getElementById('sale-modal').classList.remove('hidden');
+            document.getElementById('sale-amount').value = '';
+            document.getElementById('sale-product').value = '';
+            setTimeout(() => document.getElementById('sale-amount').focus(), 100);
+        }
+
+        function saveSale() {
+            const amount = parseFloat(document.getElementById('sale-amount').value);
+            const product = document.getElementById('sale-product').value.trim() || 'Sale';
+
+            if (!amount || amount <= 0) {
+                alert('⚠️ Please enter a valid sale amount');
+                return;
+            }
+
+            const sale = {
+                amount: amount,
+                product: product,
+                timestamp: new Date().toISOString()
+            };
+
+            userData.sales.push(sale);
+            userData.todayRevenue += amount;
+            userData.monthRevenue += amount;
+            userData.todaySales += 1;
+
+            const today = new Date().toISOString().split('T')[0];
+            userData.dailyRevenue[today] = (userData.dailyRevenue[today] || 0) + amount;
+
+            userData.activities.unshift({
+                type: 'sale',
+                text: `💰 Sale: $${amount.toFixed(2)} - ${product}`,
+                timestamp: new Date().toISOString()
+            });
+
+            if (userData.activities.length > 50) userData.activities = userData.activities.slice(0, 50);
+
+            saveUserData();
+            updateDashboard();
+            closeModal('sale-modal');
+
+            showNotification('✅ Sale logged successfully!', 'success');
+        }
+
+        // Log member
+        function logMember() {
+            document.getElementById('member-modal').classList.remove('hidden');
+        }
+
+        function saveMember() {
+            const email = document.getElementById('member-email').value.trim();
+            const plan = document.getElementById('member-plan').value.trim() || 'Member';
+
+            userData.members += 1;
+            userData.newMembersToday += 1;
+
+            userData.activities.unshift({
+                type: 'member',
+                text: `👤 New member joined - ${plan}`,
+                timestamp: new Date().toISOString()
+            });
+
+            saveUserData();
+            updateDashboard();
+            closeModal('member-modal');
+
+            showNotification('✅ Member added successfully!', 'success');
+        }
+
+        // Log cancellation
+        function logCancellation() {
+            if (userData.members > 0) {
+                userData.members -= 1;
+                userData.activities.unshift({
+                    type: 'cancel',
+                    text: '❌ Member cancelled',
+                    timestamp: new Date().toISOString()
+                });
+                saveUserData();
+                updateDashboard();
+                showNotification('Member cancellation logged', 'info');
+            }
+        }
+
+        // Update activity feed
+        function updateActivityFeed() {
+            const feed = document.getElementById('activity-feed');
+            if (userData.activities.length === 0) {
+                feed.innerHTML = '<p class="text-slate-500 text-sm text-center py-8">No activity yet. Log your first sale!</p>';
+                return;
+            }
+
+            feed.innerHTML = userData.activities.slice(0, 10).map(a => {
+                const time = new Date(a.timestamp).toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                return `
+                    <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <p class="text-sm">${a.text}</p>
+                        <p class="text-xs text-slate-500 mt-1">${time}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update milestones
+        function updateMilestones() {
+            const milestones = [];
+            
+            const goalProgress = userData.goalRevenue > 0 
+                ? (userData.monthRevenue / userData.goalRevenue * 100)
+                : 0;
+
+            milestones.push({
+                title: 'Monthly Revenue Goal',
+                progress: Math.min(100, goalProgress),
+                current: userData.monthRevenue,
+                target: userData.goalRevenue,
+                color: 'bg-green-500'
+            });
+
+            const memberGoal = Math.ceil(userData.members * 1.2);
+            milestones.push({
+                title: '+20% Member Growth',
+                progress: (userData.members / memberGoal * 100),
+                current: userData.members,
+                target: memberGoal,
+                color: 'bg-blue-500'
+            });
+
+            const html = milestones.map(m => `
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <span class="font-bold text-sm">${m.title}</span>
+                        <span class="text-sm">${m.progress.toFixed(0)}%</span>
+                    </div>
+                    <div class="bg-slate-900 rounded-full h-3 overflow-hidden">
+                        <div class="${m.color} h-full rounded-full transition-all duration-500" style="width: ${Math.min(100, m.progress)}%"></div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">$${m.current.toFixed(0)} / $${m.target.toFixed(0)}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('milestones').innerHTML = html;
+        }
+
+        // Update alerts
+        function updateAlerts() {
+            const alerts = [];
+
+            if (userData.monthRevenue >= userData.goalRevenue) {
+                alerts.push({
+                    icon: '🎉',
+                    text: 'Congratulations! You\'ve reached your monthly goal!',
+                    type: 'success'
+                });
+            } else if (userData.monthRevenue >= userData.goalRevenue * 0.8) {
+                alerts.push({
+                    icon: '🔥',
+                    text: 'You\'re 80% to your goal! Keep pushing!',
+                    type: 'warning'
+                });
+            }
+
+            if (userData.todaySales === 0 && userData.sales.length > 0) {
+                alerts.push({
+                    icon: '💡',
+                    text: 'No sales today yet. Time to promote your products!',
+                    type: 'info'
+                });
+            }
+
+            if (userData.members < 50) {
+                alerts.push({
+                    icon: '📈',
+                    text: 'Tip: Focus on member acquisition to reach 50 members milestone',
+                    type: 'info'
+                });
+            }
+
+            if (alerts.length === 0) {
+                alerts.push({
+                    icon: '✅',
+                    text: 'All systems looking good! Keep up the great work.',
+                    type: 'success'
+                });
+            }
+
+            const html = alerts.map(a => `
+                <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-xl">
+                    <p class="text-sm"><span class="text-xl mr-2">${a.icon}</span>${a.text}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('alerts-list').innerHTML = html;
+        }
+
+        // Update chart
+        function updateChart() {
+            const ctx = document.getElementById('revenueChart');
+            if (!ctx) return;
+
+            const last7Days = [];
+            const today = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                last7Days.push({
+                    date: dateStr,
+                    revenue: userData.dailyRevenue[dateStr] || 0,
+                    label: date.toLocaleDateString('en-US', { weekday: 'short' })
+                });
+            }
+
+            if (revenueChart) revenueChart.destroy();
+
+            revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: last7Days.map(d => d.label),
+                    datasets: [{
+                        label: 'Daily Revenue',
+                        data: last7Days.map(d => d.revenue),
+                        backgroundColor: '#f97316',
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => '$' + value,
+                                color: '#94a3b8'
+                            },
+                            grid: { color: '#1e293b' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Modal functions
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function resetData() {
+            if (confirm('⚠️ Are you sure? This will delete ALL your data!')) {
+                window.storage.delete('whop-tracker-user');
+                location.reload();
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(userData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `whop-tracker-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showNotification('✅ Data exported successfully!', 'success');
+        }
+
+        function showNotification(text, type) {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500',
+                warning: 'bg-orange-500'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 ${colors[type]} text-white px-6 py-4 rounded-xl shadow-2xl z-50 slide-in`;
+            notification.textContent = text;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
