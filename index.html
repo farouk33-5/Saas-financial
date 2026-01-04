@@ -7,155 +7,469 @@
     <title>Whop Business Intelligence Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .active-tab { border-bottom: 4px solid #ff5a1f; color: #ff5a1f; }
+        .active-tab { 
+            border-bottom: 3px solid #ff5a1f; 
+            color: #ff5a1f;
+            background: #fff5f2;
+        }
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .connected {
+            background: #10b981;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
 
-    <nav class="bg-black text-white p-4 flex justify-between items-center shadow-xl">
-        <div class="flex items-center gap-2">
-            <div class="bg-[#ff5a1f] w-8 h-8 rounded-lg flex items-center justify-center font-black">W</div>
-            <span class="font-black tracking-tighter text-xl">BI HUB</span>
+    <!-- Navigation -->
+    <nav class="bg-black text-white p-4 shadow-2xl sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#ff5a1f] w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg">W</div>
+                <div>
+                    <span class="font-black tracking-tight text-xl block">BI Hub</span>
+                    <span class="text-xs text-slate-400">Business Intelligence</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="connection-status" class="hidden items-center gap-2 bg-slate-800 px-4 py-2 rounded-full text-xs">
+                    <div class="w-2 h-2 rounded-full bg-green-500 connected"></div>
+                    <span>Connected to Whop</span>
+                </div>
+                <button onclick="connectWhopAPI()" id="connect-btn" class="bg-[#ff5a1f] px-6 py-2.5 rounded-full text-sm font-bold hover:bg-orange-600 transition-all transform hover:scale-105 active:scale-95">
+                    🔗 Connect Whop API
+                </button>
+            </div>
         </div>
-        <button onclick="simulateConnect()" class="bg-[#ff5a1f] px-4 py-2 rounded-full text-xs font-bold hover:bg-orange-600 transition">
-            ðŸ”— CONNECT WHOP API
-        </button>
     </nav>
 
-    <div class="max-w-5xl mx-auto mt-8 bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto mt-8 mb-12 px-4">
         
-        <div class="flex border-b bg-white overflow-x-auto">
-            <button onclick="showTab('dashboard')" id="tab-dashboard" class="flex-1 p-5 font-bold active-tab">Dashboard</button>
-            <button onclick="showTab('analytics')" id="tab-analytics" class="flex-1 p-5 font-bold text-slate-400">Sales Analytics</button>
-            <button onclick="showTab('planner')" id="tab-planner" class="flex-1 p-5 font-bold text-slate-400">Growth Planner</button>
-        </div>
-
-        <div class="p-8">
-            <div id="dashboard" class="tab-content active space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="p-6 bg-slate-100 rounded-3xl">
-                        <p class="text-xs font-bold text-slate-500 uppercase">Total Revenue (Live)</p>
-                        <h2 id="live-rev" class="text-3xl font-black mt-2">$0.00</h2>
-                    </div>
-                    <div class="p-6 bg-slate-100 rounded-3xl">
-                        <p class="text-xs font-bold text-slate-500 uppercase">Active Subscriptions</p>
-                        <h2 id="live-subs" class="text-3xl font-black mt-2">0</h2>
-                    </div>
-                    <div class="p-6 bg-orange-50 rounded-3xl border border-orange-100">
-                        <p class="text-xs font-bold text-orange-600 uppercase">Growth Potential</p>
-                        <h2 class="text-3xl font-black mt-2 text-orange-700">+24%</h2>
-                    </div>
+        <!-- API Key Input Section -->
+        <div id="api-setup" class="bg-white shadow-2xl rounded-3xl p-8 mb-8 border border-slate-200">
+            <div class="max-w-2xl mx-auto text-center">
+                <div class="bg-orange-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">🔑</span>
+                </div>
+                <h2 class="text-2xl font-black mb-2">Connect Your Whop Store</h2>
+                <p class="text-slate-600 mb-6">Enter your Whop API key to unlock real-time business insights</p>
+                
+                <div class="space-y-4">
+                    <input 
+                        type="password" 
+                        id="api-key-input" 
+                        placeholder="Enter your Whop API Key (e.g., whop_xxxxxxxxxxxxx)" 
+                        class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-orange-500 focus:outline-none transition-all"
+                    >
+                    <button onclick="validateAndConnect()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-2xl font-bold hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                        Connect & Analyze
+                    </button>
                 </div>
                 
-                <div class="bg-white p-6 rounded-3xl border h-80">
-                    <canvas id="mainChart"></canvas>
+                <div class="mt-6 text-left bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <p class="text-sm font-semibold text-blue-900 mb-2">📘 How to get your API key:</p>
+                    <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                        <li>Go to <a href="https://whop.com/settings/developer" target="_blank" class="underline font-semibold">Whop Developer Settings</a></li>
+                        <li>Create a new API key with "Read" permissions</li>
+                        <li>Copy the key and paste it above</li>
+                    </ol>
                 </div>
-            </div>
-
-            <div id="analytics" class="tab-content">
-                <h3 class="text-xl font-black mb-4">Store Performance Metrics</h3>
-                <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 mb-6">
-                    <p class="text-blue-800 font-medium">ðŸ’¡ <strong>Insight:</strong> Your "Premium Plan" has the lowest churn rate. Consider increasing marketing spend there.</p>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="p-4 border rounded-xl">
-                        <span class="block text-slate-400 text-xs">Customer LTV</span>
-                        <span class="text-xl font-bold">$450.00</span>
-                    </div>
-                    <div class="p-4 border rounded-xl">
-                        <span class="block text-slate-400 text-xs">Churn Rate</span>
-                        <span class="text-xl font-bold text-red-500">3.2%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="planner" class="tab-content space-y-6">
-                <div class="bg-slate-900 text-white p-6 rounded-3xl">
-                    <h3 class="font-bold">Manual Adjustment Mode</h3>
-                    <p class="text-xs opacity-70">Adjust metrics to see how they impact your Whop business.</p>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-bold mb-2">Monthly Ad Spend ($)</label>
-                        <input type="number" id="ad-spend" value="500" class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold mb-2">Target Growth (%)</label>
-                        <input type="number" id="target-growth" value="15" class="w-full p-4 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none">
-                    </div>
-                </div>
-                <button onclick="updateData()" class="w-full bg-black text-white p-5 rounded-2xl font-black hover:bg-slate-800 transition">UPDATE PROJECTIONS</button>
             </div>
         </div>
+
+        <!-- Main Dashboard (Hidden until connected) -->
+        <div id="main-dashboard" class="hidden">
+            <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
+                
+                <!-- Tabs -->
+                <div class="flex border-b bg-slate-50 overflow-x-auto">
+                    <button onclick="switchTab('overview')" id="tab-overview" class="flex-1 p-5 font-bold transition-all active-tab">
+                        📊 Overview
+                    </button>
+                    <button onclick="switchTab('revenue')" id="tab-revenue" class="flex-1 p-5 font-bold text-slate-500 transition-all hover:bg-slate-100">
+                        💰 Revenue Analytics
+                    </button>
+                    <button onclick="switchTab('customers')" id="tab-customers" class="flex-1 p-5 font-bold text-slate-500 transition-all hover:bg-slate-100">
+                        👥 Customers
+                    </button>
+                    <button onclick="switchTab('insights')" id="tab-insights" class="flex-1 p-5 font-bold text-slate-500 transition-all hover:bg-slate-100">
+                        💡 AI Insights
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-8">
+                    
+                    <!-- Overview Tab -->
+                    <div id="content-overview" class="tab-content active">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                            <div class="metric-card p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-3xl border border-orange-200">
+                                <p class="text-xs font-bold text-orange-700 uppercase mb-2">Total Revenue</p>
+                                <h2 id="total-revenue" class="text-3xl font-black text-orange-900">$0</h2>
+                                <p class="text-xs text-orange-600 mt-2">↑ All-time earnings</p>
+                            </div>
+                            <div class="metric-card p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl border border-blue-200">
+                                <p class="text-xs font-bold text-blue-700 uppercase mb-2">Active Members</p>
+                                <h2 id="active-members" class="text-3xl font-black text-blue-900">0</h2>
+                                <p class="text-xs text-blue-600 mt-2">Current subscribers</p>
+                            </div>
+                            <div class="metric-card p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-3xl border border-green-200">
+                                <p class="text-xs font-bold text-green-700 uppercase mb-2">MRR</p>
+                                <h2 id="mrr" class="text-3xl font-black text-green-900">$0</h2>
+                                <p class="text-xs text-green-600 mt-2">Monthly recurring</p>
+                            </div>
+                            <div class="metric-card p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl border border-purple-200">
+                                <p class="text-xs font-bold text-purple-700 uppercase mb-2">Avg. Order Value</p>
+                                <h2 id="avg-order" class="text-3xl font-black text-purple-900">$0</h2>
+                                <p class="text-xs text-purple-600 mt-2">Per transaction</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white border-2 border-slate-200 rounded-3xl p-6">
+                                <h3 class="font-bold text-lg mb-4">Revenue Trend (Last 30 Days)</h3>
+                                <canvas id="revenueChart" class="w-full" style="height: 250px;"></canvas>
+                            </div>
+                            <div class="bg-white border-2 border-slate-200 rounded-3xl p-6">
+                                <h3 class="font-bold text-lg mb-4">Top Products</h3>
+                                <div id="top-products" class="space-y-3">
+                                    <p class="text-slate-400 text-sm">Loading products...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Tab -->
+                    <div id="content-revenue" class="tab-content">
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-black mb-2">Revenue Breakdown</h3>
+                            <p class="text-slate-600">Detailed analysis of your income streams</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            <div class="p-6 bg-slate-100 rounded-2xl">
+                                <span class="text-xs font-bold text-slate-500 uppercase">This Month</span>
+                                <h3 id="month-revenue" class="text-2xl font-black mt-1">$0</h3>
+                            </div>
+                            <div class="p-6 bg-slate-100 rounded-2xl">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Last Month</span>
+                                <h3 id="last-month-revenue" class="text-2xl font-black mt-1">$0</h3>
+                            </div>
+                            <div class="p-6 bg-green-50 rounded-2xl border border-green-200">
+                                <span class="text-xs font-bold text-green-700 uppercase">Growth</span>
+                                <h3 id="growth-rate" class="text-2xl font-black mt-1 text-green-700">0%</h3>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border-2 border-slate-200 rounded-3xl p-6">
+                            <canvas id="revenueDetailChart" style="height: 300px;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Customers Tab -->
+                    <div id="content-customers" class="tab-content">
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-black mb-2">Customer Analytics</h3>
+                            <p class="text-slate-600">Understanding your member base</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="p-6 bg-slate-100 rounded-2xl">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Customer Lifetime Value</span>
+                                <h3 id="ltv" class="text-3xl font-black mt-2">$0</h3>
+                                <p class="text-xs text-slate-500 mt-2">Average per customer</p>
+                            </div>
+                            <div class="p-6 bg-slate-100 rounded-2xl">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Churn Rate</span>
+                                <h3 id="churn" class="text-3xl font-black mt-2">0%</h3>
+                                <p class="text-xs text-slate-500 mt-2">Monthly cancellation rate</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 bg-white border-2 border-slate-200 rounded-3xl p-6">
+                            <h4 class="font-bold mb-4">Recent Customers</h4>
+                            <div id="recent-customers" class="space-y-2">
+                                <p class="text-slate-400 text-sm">Loading customer data...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Insights Tab -->
+                    <div id="content-insights" class="tab-content">
+                        <div class="mb-6">
+                            <h3 class="text-2xl font-black mb-2">AI-Powered Insights</h3>
+                            <p class="text-slate-600">Smart recommendations to grow your business</p>
+                        </div>
+
+                        <div id="ai-insights" class="space-y-4">
+                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-6">
+                                <div class="flex items-start gap-4">
+                                    <span class="text-3xl">🤖</span>
+                                    <div>
+                                        <h4 class="font-bold text-purple-900 mb-2">Analyzing your data...</h4>
+                                        <p class="text-purple-700 text-sm">AI insights will appear here once we process your Whop store data.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        let myChart = null;
+        let whopData = null;
+        let charts = {};
 
-        function showTab(tabId) {
-            // Hide all
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('nav + div button').forEach(el => el.classList.remove('active-tab', 'text-slate-400'));
-            
-            // Show selected
-            document.getElementById(tabId).classList.add('active');
-            document.getElementById('tab-' + tabId).classList.add('active-tab');
-            
-            if(tabId === 'dashboard') initChart();
-        }
-
-        function simulateConnect() {
-            alert("Connecting to Whop API... Fetching store data.");
-            document.getElementById('live-rev').innerText = "$12,450.00";
-            document.getElementById('live-subs').innerText = "142";
-            updateData();
-        }
-
-        function updateData() {
-            const rev = 12450;
-            const growth = document.getElementById('target-growth').value / 100;
-            let data = [];
-            let labels = [];
-
-            for(let i=1; i<=6; i++) {
-                labels.push("Month " + i);
-                data.push(rev * Math.pow((1+growth), i));
-            }
-            renderChart(labels, data);
-        }
-
-        function renderChart(labels, data) {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Projected Sales',
-                        data: data,
-                        backgroundColor: '#ff5a1f',
-                        borderRadius: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
-                }
+        // Tab switching with proper event handling
+        function switchTab(tabName) {
+            // Remove active from all tabs
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('active-tab', 'bg-slate-50');
+                btn.classList.add('text-slate-500');
             });
+            
+            // Hide all content
+            document.querySelectorAll('[id^="content-"]').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Activate selected
+            const activeBtn = document.getElementById('tab-' + tabName);
+            const activeContent = document.getElementById('content-' + tabName);
+            
+            if (activeBtn && activeContent) {
+                activeBtn.classList.add('active-tab');
+                activeBtn.classList.remove('text-slate-500');
+                activeContent.classList.add('active');
+            }
         }
 
-        // Initialize
-        window.onload = () => {
-            showTab('dashboard');
-            updateData();
-        };
+        // Connect to Whop API
+        async function connectWhopAPI() {
+            const btn = document.getElementById('connect-btn');
+            btn.innerHTML = '<span class="loading"></span> Connecting...';
+            btn.disabled = true;
+            
+            // Simulate API connection
+            setTimeout(() => {
+                document.getElementById('api-setup').style.display = 'none';
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                document.getElementById('connection-status').classList.remove('hidden');
+                document.getElementById('connection-status').classList.add('flex');
+                
+                btn.innerHTML = '✓ Connected';
+                btn.classList.add('bg-green-600');
+                
+                // Load demo data
+                loadWhopData();
+            }, 1500);
+        }
+
+        // Validate and connect with API key
+        function validateAndConnect() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            
+            if (!apiKey) {
+                alert('⚠️ Please enter your Whop API key');
+                return;
+            }
+            
+            if (!apiKey.startsWith('whop_')) {
+                alert('⚠️ Invalid API key format. Should start with "whop_"');
+                return;
+            }
+            
+            connectWhopAPI();
+        }
+
+        // Load Whop data (simulated - replace with real API call)
+        async function loadWhopData() {
+            // Simulate API response
+            whopData = {
+                totalRevenue: 47850.00,
+                activeMembers: 342,
+                mrr: 8950.00,
+                avgOrder: 139.99,
+                monthRevenue: 12400.00,
+                lastMonthRevenue: 10200.00,
+                products: [
+                    { name: 'Premium Membership', sales: 145, revenue: 7250 },
+                    { name: 'VIP Access', sales: 89, revenue: 4450 },
+                    { name: 'Starter Pack', sales: 201, revenue: 2010 }
+                ],
+                recentCustomers: [
+                    { email: 'user***@gmail.com', joined: '2 hours ago', plan: 'Premium' },
+                    { email: 'member***@yahoo.com', joined: '5 hours ago', plan: 'VIP' }
+                ]
+            };
+            
+            updateDashboard();
+        }
+
+        // Update dashboard with real data
+        function updateDashboard() {
+            if (!whopData) return;
+            
+            // Update metrics
+            document.getElementById('total-revenue').textContent = '$' + whopData.totalRevenue.toLocaleString();
+            document.getElementById('active-members').textContent = whopData.activeMembers.toLocaleString();
+            document.getElementById('mrr').textContent = '$' + whopData.mrr.toLocaleString();
+            document.getElementById('avg-order').textContent = '$' + whopData.avgOrder.toFixed(2);
+            
+            document.getElementById('month-revenue').textContent = '$' + whopData.monthRevenue.toLocaleString();
+            document.getElementById('last-month-revenue').textContent = '$' + whopData.lastMonthRevenue.toLocaleString();
+            
+            const growth = ((whopData.monthRevenue - whopData.lastMonthRevenue) / whopData.lastMonthRevenue * 100).toFixed(1);
+            document.getElementById('growth-rate').textContent = '+' + growth + '%';
+            
+            // Update products
+            const productsHTML = whopData.products.map((p, i) => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-lg text-slate-400">${i + 1}</span>
+                        <div>
+                            <p class="font-bold text-sm">${p.name}</p>
+                            <p class="text-xs text-slate-500">${p.sales} sales</p>
+                        </div>
+                    </div>
+                    <span class="font-bold text-green-600">$${p.revenue.toLocaleString()}</span>
+                </div>
+            `).join('');
+            document.getElementById('top-products').innerHTML = productsHTML;
+            
+            // Update customers
+            document.getElementById('ltv').textContent = '$' + (whopData.totalRevenue / whopData.activeMembers).toFixed(2);
+            document.getElementById('churn').textContent = '3.2%';
+            
+            const customersHTML = whopData.recentCustomers.map(c => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <div>
+                        <p class="font-medium text-sm">${c.email}</p>
+                        <p class="text-xs text-slate-500">${c.joined} • ${c.plan}</p>
+                    </div>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Active</span>
+                </div>
+            `).join('');
+            document.getElementById('recent-customers').innerHTML = customersHTML;
+            
+            // Create charts
+            createCharts();
+            generateAIInsights();
+        }
+
+        // Create visualization charts
+        function createCharts() {
+            // Revenue trend chart
+            const ctx1 = document.getElementById('revenueChart');
+            if (ctx1 && !charts.revenue) {
+                charts.revenue = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: ['Day 1', 'Day 7', 'Day 14', 'Day 21', 'Day 30'],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: [8500, 9200, 10500, 11800, 12400],
+                            borderColor: '#ff5a1f',
+                            backgroundColor: 'rgba(255, 90, 31, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: value => '$' + value.toLocaleString()
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Generate AI insights
+        function generateAIInsights() {
+            const insights = [
+                {
+                    icon: '📈',
+                    title: 'Strong Growth Trajectory',
+                    text: 'Your revenue is up 21.6% from last month. Continue current marketing efforts.',
+                    color: 'green'
+                },
+                {
+                    icon: '🎯',
+                    title: 'Top Performer: Premium Membership',
+                    text: 'This product generates 34% of total revenue. Consider upselling to existing members.',
+                    color: 'blue'
+                },
+                {
+                    icon: '⚠️',
+                    title: 'Churn Alert',
+                    text: '3.2% churn rate detected. Focus on member engagement and retention strategies.',
+                    color: 'orange'
+                }
+            ];
+            
+            const insightsHTML = insights.map(i => `
+                <div class="bg-gradient-to-r from-${i.color}-50 to-${i.color}-100 border-2 border-${i.color}-200 rounded-2xl p-6">
+                    <div class="flex items-start gap-4">
+                        <span class="text-3xl">${i.icon}</span>
+                        <div>
+                            <h4 class="font-bold text-${i.color}-900 mb-2">${i.title}</h4>
+                            <p class="text-${i.color}-700 text-sm">${i.text}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('ai-insights').innerHTML = insightsHTML;
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Whop BI Hub loaded successfully');
+        });
     </script>
 </body>
 </html>
